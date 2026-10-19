@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="success-page">
+  <div class="success-mark">✓</div><div class="eyebrow">TRAINING COMPLETE</div><h2>Your model has been updated.</h2>
+  <p>The active classifier has been retrained and saved locally. Evaluation metrics below were calculated on a held-out split before the model was refitted on all uploaded rows.</p>
+  <div class="metric-grid compact-metrics">
+    <article class="metric-card"><span>Accuracy</span><strong>{{ model_info.metrics.accuracy }}<small>%</small></strong></article>
+    <article class="metric-card"><span>Spam precision</span><strong>{{ model_info.metrics.precision }}<small>%</small></strong></article>
+    <article class="metric-card"><span>Spam recall</span><strong>{{ model_info.metrics.recall }}<small>%</small></strong></article>
+    <article class="metric-card"><span>F1-score</span><strong>{{ model_info.metrics.f1 }}<small>%</small></strong></article>
+  </div>
+  <div class="evaluation-details"><div><span>Training data</span><strong>{{ model_info.metrics.dataset_size }} messages</strong></div><div><span>Spam / ham</span><strong>{{ model_info.metrics.spam_count }} / {{ model_info.metrics.ham_count }}</strong></div><div><span>Text column</span><strong>{{ model_info.metrics.text_column }}</strong></div><div><span>Label column</span><strong>{{ model_info.metrics.label_column }}</strong></div></div>
+  <div class="notice notice-cool"><span class="notice-symbol">✓</span><div><strong>{{ model_info.source }}</strong><p>Saved locally at the project's <code>instance/mailguard_model.joblib</code>. The raw uploaded CSV was not retained.</p></div></div>
+  <div class="button-row"><a class="button button-primary" href="{{ url_for('index') }}">Return to dashboard →</a><a class="button button-secondary" href="{{ url_for('batch_page') }}">Analyze a CSV</a></div>
+  <p class="metric-warning">Do not use the displayed score as proof of deployment readiness. Test with a separate, representative dataset and review false positives and false negatives.</p>
+</section>
+{% endblock %}

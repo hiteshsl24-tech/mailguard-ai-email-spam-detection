@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero-panel">
+  <div class="hero-copy">
+    <div class="hero-tag"><span class="tag-dot"></span> EMAIL THREAT SCREENING</div>
+    <h2>Spot suspicious messages<br><em>before you trust them.</em></h2>
+    <p>Classify email text with a machine-learning model, review simple risk indicators, and train it with your own labeled dataset.</p>
+    <a class="text-link" href="#analyzer">Analyze an email <span>↘</span></a>
+  </div>
+  <div class="hero-visual" aria-hidden="true">
+    <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+    <div class="shield"><span>✓</span></div>
+    <div class="scan-card scan-top"><span class="mini-icon red">!</span><span><b>Suspicious link</b><small>Risk indicator</small></span><span class="scan-pill">FLAG</span></div>
+    <div class="scan-card scan-bottom"><span class="mini-icon green">✓</span><span><b>Text classifier</b><small>TF-IDF + Naive Bayes</small></span><span class="scan-pill safe">READY</span></div>
+  </div>
+</section>
+
+{% if model_info.is_demo %}
+<div class="notice notice-warm"><span class="notice-symbol">i</span><div><strong>Demo model in use</strong><p>This starts with a small, bundled teaching dataset. Its scores are not evidence of real-world accuracy. Train it with a larger, representative, labeled dataset before drawing conclusions.</p></div></div>
+{% else %}
+<div class="notice notice-cool"><span class="notice-symbol">✓</span><div><strong>Custom model trained</strong><p>Current model source: {{ model_info.source }}. Evaluation metrics below come from a held-out split of that dataset.</p></div></div>
+{% endif %}
+
+{% if error %}<div class="alert alert-error"><strong>Action not completed</strong><span>{{ error }}</span></div>{% endif %}
+{% if result %}
+<section class="result-panel {% if result.label == 'spam' %}result-spam{% else %}result-ham{% endif %}">
+  <div class="result-symbol">{% if result.label == 'spam' %}!{% else %}✓{% endif %}</div>
+  <div class="result-copy">
+    <div class="eyebrow">CLASSIFICATION RESULT</div>
+    <h2>{% if result.label == 'spam' %}Potential spam detected{% else %}Classified as legitimate{% endif %}</h2>
+    <p>{% if result.label == 'spam' %}Treat this message cautiously. Do not open links, attachments, or provide credentials until independently verified.{% else %}The model did not classify this as spam. This is not a guarantee that the email is safe.{% endif %}</p>
+    <div class="result-stats"><span>Spam probability <b>{{ result.spam_probability }}%</b></span><span>Model confidence <b>{{ result.confidence }}%</b></span></div>
+    <div class="probability-track"><span style="width: {{ result.spam_probability }}%"></span></div>
+    {% if result.indicators %}
+    <div class="indicator-area"><strong>Text-based indicators found</strong><div class="indicator-list">{% for item in result.indicators %}<span>{{ item }}</span>{% endfor %}</div></div>
+    {% else %}<div class="no-indicators">No simple text indicators matched. A message can still be malicious without these patterns.</div>{% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section id="analyzer" class="section-block">
+  <div class="section-heading"><div><div class="eyebrow">01 / CHECK A MESSAGE</div><h2>Single email analysis</h2></div><span class="section-counter">LIVE PREDICTION</span></div>
+  <form class="form-card" action="{{ url_for('predict') }}" method="post">
+    <div class="form-intro"><span class="form-icon">✉</span><div><strong>Analyze email content</strong><p>Paste only the subject and body. The app does not connect to your inbox.</p></div></div>
+    <label for="subject">Email subject <span class="optional">OPTIONAL</span></label>
+    <input id="subject" name="subject" type="text" maxlength="300" value="{{ subject }}" placeholder="e.g. Action required: verify your account">
+    <label for="email_body">Email body</label>
+    <textarea id="email_body" name="email_body" rows="5" maxlength="20000" placeholder="Paste the message text here…" required>{{ email_body }}</textarea>
+    <div class="form-footer"><span>Do not paste sensitive emails or personal data.</span><button class="button button-primary" type="submit">Analyze message <span>→</span></button></div>
+  </form>
+</section>
+
+<section class="section-block metrics-section">
+  <div class="section-heading"><div><div class="eyebrow">02 / MODEL PERFORMANCE</div><h2>Evaluation snapshot</h2></div><span class="section-counter">HELD-OUT TEST SET</span></div>
+  <div class="metric-grid">
+    <article class="metric-card"><span>Accuracy</span><strong>{{ model_info.metrics.accuracy }}<small>%</small></strong><div class="metric-foot">Correct predictions overall</div></article>
+    <article class="metric-card"><span>Spam precision</span><strong>{{ model_info.metrics.precision }}<small>%</small></strong><div class="metric-foot">Predicted spam that was spam</div></article>
+    <article class="metric-card"><span>Spam recall</span><strong>{{ model_info.metrics.recall }}<small>%</small></strong><div class="metric-foot">Spam examples detected</div></article>
+    <article class="metric-card"><span>Spam F1-score</span><strong>{{ model_info.metrics.f1 }}<small>%</small></strong><div class="metric-foot">Balance of precision and recall</div></article>
+  </div>
+  <div class="evaluation-details">
+    <div><span>Training data</span><strong>{{ model_info.metrics.dataset_size }} messages</strong></div>
+    <div><span>Held-out test set</span><strong>{{ model_info.metrics.test_size }} messages</strong></div>
+    <div><span>Legitimate / ham</span><strong>{{ model_info.metrics.ham_count }}</strong></div>
+    <div><span>Spam</span><strong>{{ model_info.metrics.spam_count }}</strong></div>
+  </div>
+  <div class="confusion-card"><div><h3>Confusion matrix</h3><p>Test-set counts; rows are actual labels, columns are predicted labels.</p></div>
+    <div class="matrix-wrap"><table class="matrix"><thead><tr><th></th><th>Predicted ham</th><th>Predicted spam</th></tr></thead><tbody><tr><th>Actual ham</th><td>{{ model_info.metrics.confusion_matrix.true_ham_pred_ham }}</td><td>{{ model_info.metrics.confusion_matrix.true_ham_pred_spam }}</td></tr><tr><th>Actual spam</th><td>{{ model_info.metrics.confusion_matrix.true_spam_pred_ham }}</td><td>{{ model_info.metrics.confusion_matrix.true_spam_pred_spam }}</td></tr></tbody></table></div>
+  </div>
+  <p class="metric-warning">Accuracy depends on dataset quality and class balance. A small or duplicated dataset can make metrics look unrealistically strong. Always evaluate on representative, previously unseen email data.</p>
+</section>
+
+<section id="training" class="section-block training-section">
+  <div class="section-heading"><div><div class="eyebrow">03 / IMPROVE YOUR MODEL</div><h2>Train from your dataset</h2></div><span class="section-counter">CSV · SUPERVISED LEARNING</span></div>
+  <div class="training-grid">
+    <form class="form-card upload-card" action="{{ url_for('train') }}" method="post" enctype="multipart/form-data">
+      <div class="form-intro"><span class="form-icon violet">↥</span><div><strong>Upload labeled emails</strong><p>Upload a CSV with one email-text column and one label column.</p></div></div>
+      <label for="dataset">Dataset file (.csv)</label><input id="dataset" name="dataset" type="file" accept=".csv,text/csv" required>
+      <div class="two-fields"><div><label for="text_column">Text column <span class="optional">AUTO</span></label><input id="text_column" name="text_column" type="text" placeholder="text or message"></div><div><label for="label_column">Label column <span class="optional">AUTO</span></label><input id="label_column" name="label_column" type="text" placeholder="label or category"></div></div>
+      <div class="dataset-hint"><strong>Accepted labels</strong><p><code>spam</code> and <code>ham</code> / <code>legitimate</code>. For numeric labels, <code>1 = spam</code> and <code>0 = ham</code>. At least 20 non-empty labeled rows are required.</p><a href="{{ url_for('static', filename='sample_dataset.csv') }}" class="text-link" download>Get sample dataset <span>↓</span></a></div>
+      <button class="button button-primary full-button" type="submit">Train and replace model <span>→</span></button>
+    </form>
+    <div class="steps-card"><div class="eyebrow">HOW IT WORKS</div><h3>Simple data-mining pipeline</h3>
+      <div class="pipeline-step"><span>01</span><div><strong>Clean and label</strong><p>Remove empty messages and map labels into spam / legitimate classes.</p></div></div>
+      <div class="pipeline-step"><span>02</span><div><strong>TF-IDF features</strong><p>Convert words and short phrases into numeric features.</p></div></div>
+      <div class="pipeline-step"><span>03</span><div><strong>Train Naive Bayes</strong><p>Fit a lightweight text classifier on labeled examples.</p></div></div>
+      <div class="pipeline-step"><span>04</span><div><strong>Evaluate, then refit</strong><p>Measure a held-out split, then train the active model using the full uploaded dataset.</p></div></div>
+      <div class="privacy-note"><span>◇</span><p><strong>Privacy by design</strong><br>Uploaded training rows are processed locally and are not saved as a raw dataset by this app. Only the trained model and evaluation summary are stored under <code>instance/</code>.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="scope-note"><div class="scope-icon">↗</div><div><div class="eyebrow">SIH CONTEXT</div><h3>What this prototype covers — and what it does not</h3><p>This is an educational spam/phishing-text classifier related to the email-detection part of SIH 2026 PS <strong>SIH26106</strong>. It does not yet verify SPF/DKIM/DMARC, parse raw email headers, query domain/IP reputation, geolocate senders, correlate campaigns, or create evidentiary forensic reports. Do not describe those features as implemented.</p></div></section>
+{% endblock %}

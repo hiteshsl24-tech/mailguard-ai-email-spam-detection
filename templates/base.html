@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="MailGuard is an educational email spam detection and data-mining prototype.">
+  <title>MailGuard AI · {{ page_title|default('Email Security') }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="{{ url_for('index') }}" aria-label="MailGuard home">
+        <span class="brand-mark">M</span>
+        <span><strong>MailGuard</strong><small>EMAIL INTELLIGENCE</small></span>
+      </a>
+      <div class="nav-label">WORKSPACE</div>
+      <nav class="navigation" aria-label="Main navigation">
+        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}"><span class="nav-icon">▦</span> Overview</a>
+        <a class="nav-link {% if request.endpoint == 'batch_page' %}active{% endif %}" href="{{ url_for('batch_page') }}"><span class="nav-icon">⇧</span> Batch analysis</a>
+        <a class="nav-link" href="#training"><span class="nav-icon">◉</span> Train model</a>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="status-dot"></div><span>Local model active</span>
+        <p>Educational prototype · Not a production email gateway</p>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div><div class="eyebrow">DATA MINING PROJECT / SIH-STYLE PROTOTYPE</div><h1>{{ page_title|default('Email security overview') }}</h1></div>
+        <div class="topbar-status"><span class="pulse"></span> Model ready</div>
+      </header>
+      {% block content %}{% endblock %}
+      <footer class="footer"><span>MAILGUARD AI</span><span>TF-IDF · Multinomial Naive Bayes · Flask</span><span>Local processing</span></footer>
+    </main>
+  </div>
+</body>
+</html>

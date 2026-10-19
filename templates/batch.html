@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="batch-hero"><div><div class="eyebrow">BATCH WORKSPACE / CSV ANALYSIS</div><h2>Screen many messages<br><em>in one pass.</em></h2><p>Upload a CSV of unlabeled email messages. MailGuard adds a predicted class, model probability, and simple text indicators to a downloadable results file.</p></div><div class="batch-icon">⇧</div></section>
+{% if error %}<div class="alert alert-error"><strong>Could not analyze file</strong><span>{{ error }}</span></div>{% endif %}
+<section class="section-block">
+  <div class="section-heading"><div><div class="eyebrow">01 / UPLOAD</div><h2>Analyze a CSV</h2></div><span class="section-counter">MAXIMUM 10 MB / 50,000 ROWS</span></div>
+  <form class="form-card batch-form" action="{{ url_for('batch') }}" method="post" enctype="multipart/form-data">
+    <div class="form-intro"><span class="form-icon">▤</span><div><strong>Unlabeled message dataset</strong><p>A label column is not required. Your original rows are kept in the output with added prediction columns.</p></div></div>
+    <label for="dataset">CSV file</label><input id="dataset" name="dataset" type="file" accept=".csv,text/csv" required>
+    <label for="text_column">Email text column <span class="optional">AUTO</span></label><input id="text_column" name="text_column" type="text" placeholder="text, message, email, body…">
+    <div class="dataset-hint"><strong>Output columns</strong><p><code>mailguard_prediction</code>, <code>spam_probability_percent</code>, <code>model_confidence_percent</code>, and <code>suspicious_indicators</code>.</p></div>
+    <button class="button button-primary" type="submit">Analyze and download CSV <span>↓</span></button>
+  </form>
+  <div class="notice notice-warm batch-caution"><span class="notice-symbol">!</span><div><strong>Review before taking action</strong><p>Predictions can be wrong, especially on new attack styles, multilingual messages, short emails, or datasets that differ from the training data. Do not automatically delete or block messages based only on this prototype.</p></div></div>
+</section>
+{% endblock %}
